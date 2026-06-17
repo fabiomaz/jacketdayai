@@ -28,9 +28,40 @@ JacketDay è il tuo maggiordomo virtuale che analizza le previsioni meteo in tem
 
 ---
 
-## 🚀 Installazione e Configurazione
+## Installazione e Configurazione
 
 ### 1. Clonazione del Repository
 ```bash
 git clone [https://github.com/fabiomaz/jacketdayai.git](https://github.com/fabiomaz/jacketdayai.git)
-cd weather-wardrobe
+cd weather-wardrobe 
+```
+### 2. Creazione dell'Ambiente Virtuale
+
+# Su Windows
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+# Su macOS/Linux
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+### 3. Installazione delle Dipendenze
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configurazione delle Variabili d'Ambiente
+```bash
+WEATHER_API_KEY=il_tuo_token_openweathermap
+GEMINI_API_KEY=la_tua_chiave_api_gemini
+```
+
+### 5. Avvio del Server
+
+```bash
+uvicorn main:app --reload
+```
+
+L'applicazione sarà raggiungibile nel tuo browser all'indirizzo: http://127.0.0.1:8000
