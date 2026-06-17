@@ -1,0 +1,36 @@
+# JacketDayAI
+
+**JacketDayAI** è una web application full-stack asincrona sviluppata in **Python (FastAPI)** 
+Mai piu dubbi su cosa mettere in valigia!
+JacketDay è il tuo maggiordomo virtuale che analizza le previsioni meteo in tempo reale e sfrutta l'intelligenza artificiale per consigliarti l'outfit perfetto per i prossimi giorni.
+
+---
+
+## Caratteristiche principali
+
+* **Architettura Asincrona:** Sviluppata interamente con **FastAPI** e **HTTPX** per gestire richieste non bloccanti ad alte prestazioni.
+* **AI-Powered Stylist:** Integrazione con l'SDK ufficiale di **Google GenAI** utilizzando il modello di ultima generazione `gemini-2.5-flash`.
+* **Smart Batching (Ottimizzazione Quota):** Invece di bombardare l'IA con una richiesta per ogni singolo giorno (causando errori `429 Resource Exhausted`), l'applicazione raggruppa i dati meteo ed esegue **una sola chiamata cumulativa**, richiedendo un output in formato JSON strutturato.
+* **Security-First:** Endpoint sanificati tramite espressioni regolari (Regex) per prevenire Code Injection e configurati con policy CORS restrittive.
+* **UI Moderna & Responsive:** Frontend minimale sviluppato in **HTML5** e **Tailwind CSS**, servito direttamente da FastAPI tramite il modulo `StaticFiles`.
+
+---
+
+## Tech Stack
+
+| Componente | Tecnologie Utilizzate |
+| :--- | :--- |
+| **Backend** | Python 3.10+, FastAPI, Uvicorn, HTTPX |
+| **Intelligenza Artificiale** | Google GenAI SDK (`gemini-2.5-flash`) |
+| **Frontend** | HTML5, JavaScript (Fetch API), Tailwind CSS |
+| **Sicurezza & Config** | Pydantic (Validazione dati), Python-dotenv, CORS Middleware |
+| **API Esterne** | OpenWeatherMap API (5 Day / 3 Hour Forecast) |
+
+---
+
+## 🚀 Installazione e Configurazione
+
+### 1. Clonazione del Repository
+```bash
+git clone [https://github.com/fabiomaz/jacketdayai.git](https://github.com/fabiomaz/jacketdayai.git)
+cd weather-wardrobe
