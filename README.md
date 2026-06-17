@@ -8,11 +8,10 @@ JacketDay è il tuo maggiordomo virtuale che analizza le previsioni meteo in tem
 
 ## Caratteristiche principali
 
-* **Architettura Asincrona:** Sviluppata interamente con **FastAPI** e **HTTPX** per gestire richieste non bloccanti ad alte prestazioni.
-* **AI-Powered Stylist:** Integrazione con l'SDK ufficiale di **Google GenAI** utilizzando il modello di ultima generazione `gemini-2.5-flash`.
-* **Smart Batching (Ottimizzazione Quota):** Invece di bombardare l'IA con una richiesta per ogni singolo giorno (causando errori `429 Resource Exhausted`), l'applicazione raggruppa i dati meteo ed esegue **una sola chiamata cumulativa**, richiedendo un output in formato JSON strutturato.
-* **Security-First:** Endpoint sanificati tramite espressioni regolari (Regex) per prevenire Code Injection e configurati con policy CORS restrittive.
-* **UI Moderna & Responsive:** Frontend minimale sviluppato in **HTML5** e **Tailwind CSS**, servito direttamente da FastAPI tramite il modulo `StaticFiles`.
+* **Architettura Asincrona:** Sviluppata interamente con **FastAPI** e **HTTPX** per gestire le richieste.
+* **AI-Powered Stylist:** Integrazione con l'SDK ufficiale di **Google GenAI** utilizzando il modello `gemini-2.5-flash`.
+* **Smart Batching (Ottimizzazione Quota):** l'applicazione raggruppa i dati meteo ed esegue **una sola chiamata cumulativa**, richiedendo un output in formato JSON strutturato.
+* **UI:** Frontend minimale sviluppato in **HTML5** e **Tailwind CSS**, servito direttamente da FastAPI tramite il modulo `StaticFiles`.
 
 ---
 
