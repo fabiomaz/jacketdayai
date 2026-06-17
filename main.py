@@ -9,7 +9,7 @@ import httpx
 import os
 import json
 
-# file configurazione .env
+# carica configurazione se presente in locale
 load_dotenv()
 
 app = FastAPI(
@@ -17,35 +17,30 @@ app = FastAPI(
     description="Motore di raccomandazione outfit basato su meteo e intelligenza artificiale"
 )
 
-# solo chiamate da localhost
-ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
-
+# controllo richieste
 app.add_middleware(
     CORSMiddleware,  # type: ignore
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],  # solo richieste get
+    allow_methods=["GET"],  # Solo richieste GET
     allow_headers=["*"],
 )
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# caricamento API
-
-# openWeather
+# verifica configurazione
 if not WEATHER_API_KEY:
-    raise RuntimeError("ERRORE DI CONFIGURAZIONE: WEATHER_API_KEY non trovata nel file .env!")
+    raise RuntimeError("ERRORE DI CONFIGURAZIONE: WEATHER_API_KEY non trovata nelle variabili d'ambiente!")
+
+if not GEMINI_API_KEY:
+    raise RuntimeError("ERRORE DI CONFIGURAZIONE: GEMINI_API_KEY non trovata nelle variabili d'ambiente!")
 
 # genai
-ai_client = None
-if GEMINI_API_KEY:
-    ai_client = genai.Client(api_key=GEMINI_API_KEY)
+ai_client = genai.Client(api_key=GEMINI_API_KEY)
 
-# modelli dati Pydantic
+
+# Modelli dati
 class DailyAdvice(BaseModel):
     date: str
     temperature: float
@@ -59,14 +54,11 @@ class WardrobeResponse(BaseModel):
     city: str
     forecasts: List[DailyAdvice]
 
-# genera risposta con API gemini
+
+# risposta API Gemini
 async def generate_all_outfits_with_ai(weather_days: list) -> list:
-
-    if not GEMINI_API_KEY or not ai_client:
-        return ["Impossibile comunicare col server AI!"] * len(weather_days)
-
     try:
-        # meteo per agent IA
+        # meteo per prompt
         weather_summary = ""
         for idx, day in enumerate(weather_days):
             weather_summary += (
@@ -77,7 +69,7 @@ async def generate_all_outfits_with_ai(weather_days: list) -> list:
         # prompt
         prompt = (
             f"Agisci come un maggiordomo che deve consigliare come vestirsi.\n"
-            f"Ecco il meteo pianificato per i prossimi {len(weather_days)} giorni:\n"
+            f"Ecco il meteo pianificato per i prochains {len(weather_days)} giorni:\n"
             f"{weather_summary}\n"
             f"Genera un consiglio di abbigliamento (outfit) adatto a CIASCUN giorno.\n"
             f"Sii estremamente breve: massimo 25 parole per ciascun giorno.\n"
@@ -92,33 +84,32 @@ async def generate_all_outfits_with_ai(weather_days: list) -> list:
             contents=prompt,
         )
 
-        # pulizia stringa se c'è markdown inaspettato
+        # pulizia markdown eventuale
         clean_text = response.text.strip()
         triple_backticks = "`" * 3
 
-        # rimuovi intestazione json
         if clean_text.startswith(triple_backticks):
             clean_text = clean_text.replace(f"{triple_backticks}json", "")
             clean_text = clean_text.replace(f"{triple_backticks}", "")
             clean_text = clean_text.strip()
 
-        # parse json in lista py
+        # parsa json
         outfit_list = json.loads(clean_text)
         return outfit_list
 
     except Exception as e:
         print(f"🔍 Errore interno Gemini API: {e}")
-        return ["Errore nell'elaborazione della risposta!"] * len(weather_days)
+        return ["Errore nell'elaborazione della risposta da parte dell'IA."] * len(weather_days)
 
-# ENDPOINT
+
+# ENDPOINT API
 @app.get("/api/advise", response_model=WardrobeResponse)
 async def get_wardrobe_advice(
-        # sanifica output
+        # controllo input
         city: str = Query(..., min_length=2, max_length=50, pattern=r"^[a-zA-Z\s\-]+$"),
-        # valida giorni
         days: int = Query(default=1, ge=1, le=5)
 ):
-    # intervalli da 3 ore OpenWeather
+    # API Openweather (3 ore)
     cnt = days * 8
     url = f"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=it&cnt={cnt}"
 
@@ -135,13 +126,13 @@ async def get_wardrobe_advice(
     temporary_weather_list = []
     seen_dates = set()
 
-    # parsa dati meteorologici
+    # parsa dati
     for item in data["list"]:
         date_txt = item["dt_txt"]
         date_part = date_txt.split(" ")[0]
         time_part = date_txt.split(" ")[1]
 
-        # condizioni di mezzogiorno
+        # tempo alle ore 12:00
         if time_part == "12:00:00" or (date_part not in seen_dates and len(seen_dates) < days):
             if date_part in seen_dates:
                 continue
@@ -153,7 +144,7 @@ async def get_wardrobe_advice(
             weather_main = item["weather"][0]["main"].lower()
 
             is_raining = any(word in weather_main for word in ["rain", "drizzle", "storm"])
-            wind_speed = round(item["wind"]["speed"] * 3.6, 1)  # m/s -> km/h
+            wind_speed = round(item["wind"]["speed"] * 3.6, 1)  # Conversione da m/s a km/h
 
             temporary_weather_list.append({
                 "date": date_part,
@@ -164,10 +155,10 @@ async def get_wardrobe_advice(
                 "wind_speed": wind_speed
             })
 
-    # chiamata BATCH singola
+    # chiamata singola
     ai_advices = await generate_all_outfits_with_ai(temporary_weather_list)
 
-    # risultati
+    # risposta validata pydantic
     extracted_forecasts = []
     for idx, w in enumerate(temporary_weather_list):
         advice_text = ai_advices[idx] if idx < len(ai_advices) else "Un look casual e comodo sarà perfetto!"
