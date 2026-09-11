@@ -89,10 +89,8 @@ async def generate_all_outfits_with_ai(weather_days: list) -> list:
         )
 
         # chiamata asincrona
-        response = await ai_client.aio.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
+        chat = ai_client.aio.chats.create(model='gemini-2.5-flash')
+        response = await chat.send_message(message=prompt)
 
         # pulizia markdown eventuale
         clean_text = response.text.strip()
